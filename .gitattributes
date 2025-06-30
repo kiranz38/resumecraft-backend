@@ -1,0 +1,5 @@
+# Enforce consistent line endings
+* text=auto
+
+# Force LF for all text files (recommended for cross-platform projects)
+* text eol=lf
