@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: resumecraft-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/resumecraft
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - resumecraft-network
+
+  mongo:
+    image: mongo:6
+    container_name: resumecraft-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=your-secure-password
+      - MONGO_INITDB_DATABASE=resumecraft
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - resumecraft-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: resumecraft-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass your-redis-password
+    volumes:
+      - redis-data:/data
+    networks:
+      - resumecraft-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: resumecraft-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    networks:
+      - resumecraft-network
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  resumecraft-network:
+    driver: bridge
